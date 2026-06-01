@@ -5,7 +5,8 @@ sidebar tab — *without* dumping every track into one big playlist. Each item
 stays separate and clickable; open a collection and you get a grid of album/
 playlist covers. Click a cover to jump to the real Spotify page.
 
-Built as a [Spicetify](https://spicetify.app) custom app. macOS.
+Built as a [Spicetify](https://spicetify.app) custom app. Works on **macOS,
+Windows, and Linux**.
 
 ![Collections UI preview](docs/preview.png)
 
@@ -14,12 +15,25 @@ Your Library. (UI preview — album art and titles are placeholders.)*
 
 ## Install (run once)
 
-1. Make sure [Spicetify](https://spicetify.app/docs/getting-started) is installed.
-2. Double-click **`install.command`**.
-   - First time only: if macOS blocks it ("unidentified developer"),
-     right-click → **Open** → **Open**.
-3. Spotify relaunches. A **Collections** button appears in **Your Library**
-   (alongside your playlists/albums), plus an icon in the top nav.
+First make sure [Spicetify](https://spicetify.app/docs/getting-started) and the
+**desktop** Spotify app are installed (not the Microsoft Store / Snap-only build
+where applicable). Then, for your OS:
+
+**macOS** — double-click **`install.command`**.
+- If macOS blocks it ("unidentified developer"): right-click → **Open** → **Open**.
+
+**Windows** — double-click **`install.bat`**.
+- It runs `install.ps1` with the execution policy bypassed for that one run.
+
+**Linux** — run **`install.sh`** in a terminal:
+```bash
+chmod +x install.sh && ./install.sh
+```
+- Flatpak/Snap Spotify may need its path set once — the script links the
+  [Spicetify Linux notes](https://spicetify.app/docs/advanced-usage/installation) if `apply` fails.
+
+Spotify relaunches and a **Collections** button appears in **Your Library**
+(alongside your playlists/albums), plus an icon in the top nav.
 
 ## Use
 
@@ -33,8 +47,11 @@ Your Library. (UI preview — album art and titles are placeholders.)*
 
 ## Uninstall
 
-Double-click **`uninstall.command`**. (Your saved collections stay in Spotify's
-local storage and return if you reinstall.)
+- **macOS:** double-click `uninstall.command`
+- **Windows:** double-click `uninstall.bat`
+- **Linux:** `./uninstall.sh`
+
+(Your saved collections stay in Spotify's local storage and return if you reinstall.)
 
 ## What's inside
 
@@ -43,9 +60,14 @@ album-collections/
   manifest.json     sidebar name + icon; loads the context-menu extension at startup
   index.js          the Collections page (React via Spicetify.React, no JSX)
   contextmenu.js    "Add to collection" right-click item + Your Library button
-install.command     one-click installer
-uninstall.command   one-click remover
+install.command  /  uninstall.command    macOS (double-click)
+install.bat      /  uninstall.bat        Windows (double-click → runs the .ps1)
+install.ps1      /  uninstall.ps1         Windows PowerShell
+install.sh       /  uninstall.sh          Linux / macOS (terminal)
 ```
+
+All installers do the same thing: copy the app into Spicetify's `CustomApps`
+folder (resolved per-OS), register it, and run `spicetify apply`.
 
 Data is stored under the LocalStorage key `album-collections:v1`. Names + cover
 art are fetched from Spotify's own Web API (via `Spicetify.CosmosAsync`), with a
@@ -55,4 +77,4 @@ on clients where the Web API is unavailable.
 ## Updating after a Spotify update
 
 Spotify auto-updates sometimes wipe Spicetify. If the tab disappears, just run
-`install.command` again (or `spicetify apply`).
+the installer for your OS again (or `spicetify apply`).
