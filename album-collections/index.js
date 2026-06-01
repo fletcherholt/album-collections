@@ -6,6 +6,7 @@ const h = react.createElement;
 
 const STORE_KEY = "album-collections:v1";
 const APP_ROUTE = "/album-collections";
+const VERSION = "1.1.0";
 
 function loadData() {
     try {
@@ -204,6 +205,7 @@ function injectCss() {
 .acoll-h{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
 .acoll-h h1{font-size:26px;margin:0;font-weight:800;}
 .acoll-h .ct{opacity:.6;font-size:13px;}
+.acoll-ver{opacity:.4;font-size:12px;font-weight:600;align-self:flex-end;padding-bottom:4px;}
 .acoll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;}
 .acoll-card{position:relative;background:var(--spice-card,#181818);border-radius:8px;padding:12px;cursor:pointer;transition:background .2s;}
 .acoll-card:hover{background:#282828;}
@@ -391,7 +393,12 @@ function App() {
     return h(
         "div",
         { className: "acoll-wrap" },
-        h("div", { className: "acoll-h" }, h("h1", null, "Collections")),
+        h(
+            "div",
+            { className: "acoll-h" },
+            h("h1", null, "Collections"),
+            h("span", { className: "acoll-ver", title: "Installed version" }, "v" + VERSION)
+        ),
         data.collections.length === 0
             ? h(
                   "div",

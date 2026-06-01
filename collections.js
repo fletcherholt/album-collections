@@ -10,6 +10,7 @@
     window.__albumCollectionsExt = true;
 
     const STORE_KEY = "album-collections:v1";
+    const VERSION = "1.1.0";
     const ICON =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>';
 
@@ -221,6 +222,7 @@
 .acoll-ov-top{position:sticky;top:0;display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--spice-main,#121212);box-shadow:0 6px 12px rgba(0,0,0,.35);z-index:2;}
 .acoll-ov-top h1{font-size:24px;margin:0;font-weight:800;}
 .acoll-ov-top .ct{opacity:.6;font-size:13px;}
+.acoll-ov-top .acoll-ver{opacity:.4;font-size:12px;font-weight:600;}
 .acoll-ov-top .sp{flex:1;}
 .acoll-body{padding:22px 24px 80px;}
 .acoll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;}
@@ -444,9 +446,13 @@
         } else {
             const h1 = document.createElement("h1");
             h1.textContent = "Collections";
+            const ver = document.createElement("span");
+            ver.className = "acoll-ver";
+            ver.title = "Installed version";
+            ver.textContent = "v" + VERSION;
             const sp = document.createElement("span");
             sp.className = "sp";
-            top.append(h1, sp, makeCloseBtn());
+            top.append(h1, ver, sp, makeCloseBtn());
 
             if (!data.collections.length) {
                 const e = document.createElement("div");

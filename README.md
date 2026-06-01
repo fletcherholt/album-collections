@@ -106,6 +106,20 @@ art are fetched from Spotify's own Web API (via `Spicetify.CosmosAsync`), with a
 fallback to the auth-free `open.spotify.com/oembed` endpoint so covers still load
 on clients where the Web API is unavailable.
 
+## Updating to a new version
+
+There's no separate update step — **re-running the installer _is_ the update**.
+It deletes the old copy, drops in the latest `main`, and re-applies (which
+relaunches Spotify once). Your saved collections are untouched.
+
+- **One-line / script install:** run the same install command again.
+- **Spicetify Marketplace:** remove then reinstall Collections in the
+  Marketplace tab to pull the new code (Marketplace doesn't auto-update apps).
+
+The current version (e.g. `v1.1.0`) is shown next to the **Collections** title
+inside the app, so you can tell at a glance whether you're up to date against the
+latest [release](https://github.com/fletcherholt/album-collections/releases).
+
 ## Updating after a Spotify update
 
 Spotify auto-updates sometimes wipe Spicetify. If the tab disappears, just run
