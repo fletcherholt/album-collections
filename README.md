@@ -13,14 +13,17 @@ Built as a [Spicetify](https://spicetify.app) custom app. macOS.
 2. Double-click **`install.command`**.
    - First time only: if macOS blocks it ("unidentified developer"),
      right-click → **Open** → **Open**.
-3. Spotify relaunches. A **Collections** tab appears in the left sidebar.
+3. Spotify relaunches. A **Collections** button appears in **Your Library**
+   (alongside your playlists/albums), plus an icon in the top nav.
 
 ## Use
 
 - Right-click any **album** or **playlist** → **Add to collection** → pick one
   (or create a new one in the same popup).
-- Open the **Collections** tab → click a collection → grid of its items.
+- Click **Collections** in Your Library → click a collection → grid of its items.
 - Hover an item → **✕** removes it from that collection.
+- Click a cover to open the real album/playlist page. Spotify's back/forward
+  buttons work normally (each view is a real route).
 - The **✕**/Delete only affect the collection — your actual library is untouched.
 
 ## Uninstall
@@ -34,14 +37,15 @@ local storage and return if you reinstall.)
 album-collections/
   manifest.json     sidebar name + icon; loads the context-menu extension at startup
   index.js          the Collections page (React via Spicetify.React, no JSX)
-  contextmenu.js    "Add to collection" right-click item
+  contextmenu.js    "Add to collection" right-click item + Your Library button
 install.command     one-click installer
 uninstall.command   one-click remover
 ```
 
-Data is stored under the LocalStorage key `album-collections:v1`. No network
-calls except fetching album/playlist names + cover art from Spotify's own API
-(via `Spicetify.CosmosAsync`, using your existing session).
+Data is stored under the LocalStorage key `album-collections:v1`. Names + cover
+art are fetched from Spotify's own Web API (via `Spicetify.CosmosAsync`), with a
+fallback to the auth-free `open.spotify.com/oembed` endpoint so covers still load
+on clients where the Web API is unavailable.
 
 ## Updating after a Spotify update
 

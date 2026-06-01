@@ -5,6 +5,7 @@ const react = Spicetify.React;
 const h = react.createElement;
 
 const STORE_KEY = "album-collections:v1";
+const APP_ROUTE = "/album-collections";
 
 function loadData() {
     try {
@@ -20,32 +21,86 @@ function saveData(d) {
 function uid() {
     return "c_" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 }
+function titleCase(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
 
-// ---- metadata fetch (cached) ----
+// Which collection is open is encoded in the URL (?c=<id>) so Spotify's own
+// back/forward buttons work and re-entering the app restores the view.
+function readCollParam() {
+    try {
+        const loc = Spicetify.Platform.History.location;
+        const search = (loc && loc.search) || "";
+        return new URLSearchParams(search).get("c");
+    } catch (e) {
+        return null;
+    }
+}
+function goToCollection(id) {
+    Spicetify.Platform.History.push(`${APP_ROUTE}?c=${encodeURIComponent(id)}`);
+}
+function goToList() {
+    Spicetify.Platform.History.push(APP_ROUTE);
+}
+
+// ---- metadata fetch (cached, with fallbacks) ----
+// Spotify's Web API via CosmosAsync is richest but is broken on some clients
+// (spicetify/cli#1735), so we fall back to the auth-free oEmbed endpoint, which
+// reliably returns a title + cover art for albums and playlists.
 const metaCache = {};
+async function webApi(type, id) {
+    if (type === "album") {
+        const r = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/albums/${id}`);
+        return {
+            name: r.name,
+            image: (r.images && r.images[0] && r.images[0].url) || "",
+            sub: "Album · " + (r.artists || []).map((a) => a.name).join(", "),
+        };
+    }
+    const r = await Spicetify.CosmosAsync.get(
+        `https://api.spotify.com/v1/playlists/${id}?fields=name,images,owner.display_name`
+    );
+    return {
+        name: r.name,
+        image: (r.images && r.images[0] && r.images[0].url) || "",
+        sub: "Playlist · " + ((r.owner && r.owner.display_name) || ""),
+    };
+}
+async function oembed(uri) {
+    const url = "https://open.spotify.com/oembed?url=" + encodeURIComponent(uri);
+    let o;
+    try {
+        o = await Spicetify.CosmosAsync.get(url);
+    } catch (e) {
+        o = await (await fetch(url)).json();
+    }
+    return { name: o && o.title, image: (o && o.thumbnail_url) || "" };
+}
 async function fetchMeta(uri) {
     if (metaCache[uri]) return metaCache[uri];
     const parts = String(uri).split(":");
     const type = parts[1];
     const id = parts[2];
-    const meta = { uri, type, id, name: id, image: "", sub: "" };
+    const meta = { uri, type, id, name: "", image: "", sub: titleCase(type) || "Item" };
+
     try {
-        if (type === "album") {
-            const r = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/albums/${id}`);
-            meta.name = r.name;
-            meta.image = (r.images && r.images[0] && r.images[0].url) || "";
-            meta.sub = "Album · " + (r.artists || []).map((a) => a.name).join(", ");
-        } else if (type === "playlist") {
-            const r = await Spicetify.CosmosAsync.get(
-                `https://api.spotify.com/v1/playlists/${id}?fields=name,images,owner.display_name`
-            );
-            meta.name = r.name;
-            meta.image = (r.images && r.images[0] && r.images[0].url) || "";
-            meta.sub = "Playlist · " + ((r.owner && r.owner.display_name) || "");
-        }
+        const r = await webApi(type, id);
+        if (r.name) meta.name = r.name;
+        if (r.image) meta.image = r.image;
+        if (r.sub) meta.sub = r.sub;
     } catch (e) {
-        meta.sub = "Unavailable";
+        /* fall through to oembed */
     }
+    if (!meta.name || !meta.image) {
+        try {
+            const o = await oembed(uri);
+            if (!meta.name && o.name) meta.name = o.name;
+            if (!meta.image && o.image) meta.image = o.image;
+        } catch (e) {
+            /* leave defaults */
+        }
+    }
+    if (!meta.name) meta.name = "Unknown " + (titleCase(type) || "item");
     metaCache[uri] = meta;
     return meta;
 }
@@ -59,6 +114,7 @@ function injectCss() {
 .acoll-wrap{padding:16px 24px 80px;color:var(--spice-text,#fff);}
 .acoll-h{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
 .acoll-h h1{font-size:26px;margin:0;font-weight:800;}
+.acoll-h .ct{opacity:.6;font-size:13px;}
 .acoll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;}
 .acoll-card{position:relative;background:var(--spice-card,#181818);border-radius:8px;padding:12px;cursor:pointer;transition:background .2s;}
 .acoll-card:hover{background:#282828;}
@@ -127,21 +183,24 @@ function Card(props) {
 // ---- app ----
 function App() {
     const [data, setData] = react.useState(loadData);
-    const [openId, setOpenId] = react.useState(null);
+    const [, force] = react.useReducer((x) => x + 1, 0);
     const [newName, setNewName] = react.useState("");
-
-    const refresh = react.useCallback(() => setData(loadData()), []);
 
     react.useEffect(() => {
         injectCss();
-        const onStore = () => refresh();
-        window.addEventListener("storage", onStore);
-        window.addEventListener("focus", refresh);
+        const refresh = () => setData(loadData());
+        window.addEventListener("storage", refresh);
+        let unlisten = null;
+        try {
+            unlisten = Spicetify.Platform.History.listen(() => force());
+        } catch (e) {
+            /* History unavailable — internal nav still works via re-render */
+        }
         return () => {
-            window.removeEventListener("storage", onStore);
-            window.removeEventListener("focus", refresh);
+            window.removeEventListener("storage", refresh);
+            if (unlisten) unlisten();
         };
-    }, [refresh]);
+    }, []);
 
     const persist = (d) => {
         saveData(d);
@@ -159,7 +218,7 @@ function App() {
         const d = loadData();
         d.collections = d.collections.filter((c) => c.id !== id);
         persist(d);
-        if (openId === id) setOpenId(null);
+        if (readCollParam() === id) goToList();
     };
     const removeItem = (collId, uri) => {
         const d = loadData();
@@ -170,20 +229,18 @@ function App() {
         }
     };
 
+    const openId = readCollParam();
+    const coll = openId ? data.collections.find((c) => c.id === openId) : null;
+
     // ---- single collection view ----
-    if (openId) {
-        const coll = data.collections.find((c) => c.id === openId);
-        if (!coll) {
-            setOpenId(null);
-            return null;
-        }
+    if (coll) {
         return h(
             "div",
             { className: "acoll-wrap" },
             h(
                 "div",
                 { className: "acoll-h" },
-                h("button", { className: "acoll-btn sec", onClick: () => setOpenId(null) }, "← Back"),
+                h("button", { className: "acoll-btn sec", onClick: goToList }, "← Back"),
                 h("h1", null, coll.name),
                 h("span", { className: "ct" }, coll.items.length + " items")
             ),
@@ -221,9 +278,9 @@ function App() {
                       h(
                           "div",
                           { className: "acoll-row", key: c.id },
-                          h("span", { className: "nm", onClick: () => setOpenId(c.id) }, c.name),
+                          h("span", { className: "nm", onClick: () => goToCollection(c.id) }, c.name),
                           h("span", { className: "ct" }, c.items.length + " items"),
-                          h("button", { className: "acoll-btn", onClick: () => setOpenId(c.id) }, "Open"),
+                          h("button", { className: "acoll-btn", onClick: () => goToCollection(c.id) }, "Open"),
                           h("button", { className: "acoll-btn danger", onClick: () => delColl(c.id) }, "Delete")
                       )
                   )
