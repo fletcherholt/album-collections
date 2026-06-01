@@ -19,6 +19,22 @@ This app is listed in the **Spicetify Marketplace** (Apps tab — search
 "Collections"). Note that Marketplace lets you *browse* custom apps but doesn't
 auto-install them, so use one of the installers below to actually set it up.
 
+## Quick install (one line)
+
+**macOS / Linux** — paste into a terminal:
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/fletcherholt/album-collections/main/install-remote.sh)
+```
+
+**Windows** — paste into PowerShell:
+```powershell
+iwr -useb https://raw.githubusercontent.com/fletcherholt/album-collections/main/install-remote.ps1 | iex
+```
+
+These download the app from this repo, drop it into Spicetify's `CustomApps`,
+register it, and run `spicetify apply`. (Spicetify + desktop Spotify must already
+be installed.) Prefer a download instead? Use the zip + installers below.
+
 ## Install (run once)
 
 First make sure [Spicetify](https://spicetify.app/docs/getting-started) and the
