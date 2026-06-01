@@ -65,15 +65,92 @@
         return n;
     }
 
+    // ---------- sorting ----------
+    const SORT_KEY = "album-collections:sort";
+    const SORTS = [
+        { id: "added-old", label: "Date added (oldest)" },
+        { id: "added-new", label: "Date added (newest)" },
+        { id: "name-asc", label: "Name A–Z" },
+        { id: "name-desc", label: "Name Z–A" },
+        { id: "artist-asc", label: "Artist / creator A–Z" },
+        { id: "artist-desc", label: "Artist / creator Z–A" },
+        { id: "release-new", label: "Release date (newest)" },
+        { id: "release-old", label: "Release date (oldest)" },
+        { id: "genre-asc", label: "Genre A–Z" },
+        { id: "type", label: "Type (albums first)" },
+    ];
+    function loadSort() {
+        const v = Spicetify.LocalStorage.get(SORT_KEY);
+        return SORTS.some((s) => s.id === v) ? v : "added-old";
+    }
+    function saveSort(v) {
+        Spicetify.LocalStorage.set(SORT_KEY, v);
+    }
+    function cmpStr(a, b) {
+        return String(a || "").localeCompare(String(b || ""), undefined, {
+            sensitivity: "base",
+            numeric: true,
+        });
+    }
+    function emptyLast(v) {
+        return v ? 0 : 1;
+    }
+    function sortItems(uris, sortId) {
+        const a = uris.map((u, i) => ({ u, i, m: metaCache[u] || {} }));
+        a.sort((x, y) => {
+            const mx = x.m,
+                my = y.m;
+            switch (sortId) {
+                case "added-new":
+                    return y.i - x.i;
+                case "name-asc":
+                    return cmpStr(mx.name, my.name);
+                case "name-desc":
+                    return cmpStr(my.name, mx.name);
+                case "artist-asc":
+                    return cmpStr(mx.artist, my.artist);
+                case "artist-desc":
+                    return cmpStr(my.artist, mx.artist);
+                case "release-new":
+                    return emptyLast(mx.release) - emptyLast(my.release) || cmpStr(my.release, mx.release);
+                case "release-old":
+                    return emptyLast(mx.release) - emptyLast(my.release) || cmpStr(mx.release, my.release);
+                case "genre-asc":
+                    return emptyLast(mx.genre) - emptyLast(my.genre) || cmpStr(mx.genre, my.genre);
+                case "type":
+                    return cmpStr(mx.kind, my.kind) || cmpStr(mx.name, my.name);
+                case "added-old":
+                default:
+                    return x.i - y.i;
+            }
+        });
+        return a.map((o) => o.u);
+    }
+
     // ---------- metadata (Web API → oEmbed → fetch) ----------
     const metaCache = {};
+    async function artistGenre(artistId) {
+        if (!artistId) return "";
+        try {
+            const a = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/artists/${artistId}`);
+            return (a.genres && a.genres[0]) || "";
+        } catch (e) {
+            return "";
+        }
+    }
     async function webApi(type, id) {
         if (type === "album") {
             const r = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/albums/${id}`);
+            const a0 = (r.artists && r.artists[0]) || {};
             return {
                 name: r.name,
                 image: (r.images && r.images[0] && r.images[0].url) || "",
                 sub: "Album · " + (r.artists || []).map((a) => a.name).join(", "),
+                artist: a0.name || "",
+                release: r.release_date || "",
+                genre: (r.genres && r.genres[0]) || "",
+                artistId: a0.id || "",
+                kind: "album",
             };
         }
         const r = await Spicetify.CosmosAsync.get(
@@ -83,6 +160,11 @@
             name: r.name,
             image: (r.images && r.images[0] && r.images[0].url) || "",
             sub: "Playlist · " + ((r.owner && r.owner.display_name) || ""),
+            artist: (r.owner && r.owner.display_name) || "",
+            release: "",
+            genre: "",
+            artistId: "",
+            kind: "playlist",
         };
     }
     async function oembed(uri) {
@@ -100,12 +182,22 @@
         const parts = String(uri).split(":");
         const type = parts[1];
         const id = parts[2];
-        const meta = { uri, type, id, name: "", image: "", sub: titleCase(type) || "Item" };
+        const meta = {
+            uri, type, id, name: "", image: "", sub: titleCase(type) || "Item",
+            artist: "", release: "", genre: "", kind: type || "",
+        };
         try {
             const r = await webApi(type, id);
             if (r.name) meta.name = r.name;
             if (r.image) meta.image = r.image;
             if (r.sub) meta.sub = r.sub;
+            if (r.artist) meta.artist = r.artist;
+            if (r.release) meta.release = r.release;
+            if (r.genre) meta.genre = r.genre;
+            if (r.kind) meta.kind = r.kind;
+            if (type === "album" && !meta.genre && r.artistId) {
+                meta.genre = await artistGenre(r.artistId);
+            }
         } catch (e) {}
         if (!meta.name || !meta.image) {
             try {
@@ -151,6 +243,11 @@
 .acoll-new{display:flex;gap:8px;margin-top:22px;max-width:680px;}
 .acoll-new input{flex:1;padding:10px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;}
 .acoll-empty{opacity:.55;margin:28px 0;font-size:15px;}
+.acoll-sort{display:flex;align-items:center;gap:8px;font-size:13px;}
+.acoll-sort label{opacity:.6;white-space:nowrap;}
+.acoll-sort select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.08) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='white'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 10px center;color:var(--spice-text,#fff);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:7px 30px 7px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+.acoll-sort select:hover{background-color:rgba(255,255,255,.14);}
+.acoll-sort select option{background:#282828;color:#fff;}
 .acoll-library-btn{display:flex;align-items:center;gap:14px;width:calc(100% - 8px);box-sizing:border-box;padding:8px 12px;margin:2px 4px;background:transparent;border:none;color:var(--spice-subtext,#b3b3b3);cursor:pointer;border-radius:6px;font-size:14px;font-weight:600;font-family:inherit;text-align:left;}
 .acoll-library-btn:hover{background:var(--spice-card,rgba(255,255,255,.1));color:var(--spice-text,#fff);}
 .acoll-lib-ico{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;}
@@ -220,6 +317,30 @@
     // ---------- full-screen overlay UI ----------
     let overlay = null;
     let view = { name: "list", collId: null };
+    let sortBy = null;
+
+    function makeSortControl() {
+        if (sortBy === null) sortBy = loadSort();
+        const wrap = document.createElement("div");
+        wrap.className = "acoll-sort";
+        const label = document.createElement("label");
+        label.textContent = "Sort by";
+        const sel = document.createElement("select");
+        SORTS.forEach((s) => {
+            const o = document.createElement("option");
+            o.value = s.id;
+            o.textContent = s.label;
+            if (s.id === sortBy) o.selected = true;
+            sel.appendChild(o);
+        });
+        sel.onchange = () => {
+            sortBy = sel.value;
+            saveSort(sortBy);
+            renderOverlay();
+        };
+        wrap.append(label, sel);
+        return wrap;
+    }
 
     function makeCard(uri, onRemove) {
         const card = document.createElement("div");
@@ -286,7 +407,9 @@
             const sp = document.createElement("span");
             sp.className = "sp";
             const close = makeCloseBtn();
-            top.append(back, h1, ct, sp, close);
+            top.append(back, h1, ct, sp);
+            if (coll.items.length) top.append(makeSortControl());
+            top.append(close);
 
             if (!coll.items.length) {
                 const e = document.createElement("div");
@@ -294,9 +417,16 @@
                 e.textContent = "Empty. Right-click any album or playlist → “Add to collection”.";
                 body.appendChild(e);
             } else {
+                // Sort needs metadata; fetch any missing then re-render once.
+                const allCached = coll.items.every((u) => metaCache[u]);
+                if (!allCached) {
+                    Promise.all(coll.items.map(fetchMeta)).then(() => {
+                        if (overlay && view.name === "coll" && view.collId === coll.id) renderOverlay();
+                    });
+                }
                 const grid = document.createElement("div");
                 grid.className = "acoll-grid";
-                coll.items.forEach((uri) =>
+                sortItems(coll.items, sortBy || loadSort()).forEach((uri) =>
                     grid.appendChild(
                         makeCard(uri, (u) => {
                             const d = loadData();

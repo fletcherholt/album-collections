@@ -69,6 +69,9 @@ Spotify relaunches and a **Collections** button appears in **Your Library**
 - Right-click any **album** or **playlist** → **Add to collection** → pick one
   (or create a new one in the same popup).
 - Click **Collections** in Your Library → click a collection → grid of its items.
+- Inside a collection, use **Sort by** to reorder the grid: date added (oldest/newest),
+  name A–Z / Z–A, artist or creator A–Z / Z–A, release date (newest/oldest),
+  genre A–Z, or type (albums first). Your choice is remembered.
 - Hover an item → **✕** removes it from that collection.
 - Click a cover to open the real album/playlist page. Spotify's back/forward
   buttons work normally (each view is a real route).

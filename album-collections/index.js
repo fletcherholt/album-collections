@@ -43,18 +43,92 @@ function goToList() {
     Spicetify.Platform.History.push(APP_ROUTE);
 }
 
+// ---- sorting ----
+const SORT_KEY = "album-collections:sort";
+const SORTS = [
+    { id: "added-old", label: "Date added (oldest)" },
+    { id: "added-new", label: "Date added (newest)" },
+    { id: "name-asc", label: "Name A–Z" },
+    { id: "name-desc", label: "Name Z–A" },
+    { id: "artist-asc", label: "Artist / creator A–Z" },
+    { id: "artist-desc", label: "Artist / creator Z–A" },
+    { id: "release-new", label: "Release date (newest)" },
+    { id: "release-old", label: "Release date (oldest)" },
+    { id: "genre-asc", label: "Genre A–Z" },
+    { id: "type", label: "Type (albums first)" },
+];
+function loadSort() {
+    const v = Spicetify.LocalStorage.get(SORT_KEY);
+    return SORTS.some((s) => s.id === v) ? v : "added-old";
+}
+function saveSort(v) {
+    Spicetify.LocalStorage.set(SORT_KEY, v);
+}
+function cmpStr(a, b) {
+    return String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base", numeric: true });
+}
+function emptyLast(v) {
+    return v ? 0 : 1;
+}
+function sortItems(uris, sortId) {
+    const a = uris.map((u, i) => ({ u, i, m: metaCache[u] || {} }));
+    a.sort((x, y) => {
+        const mx = x.m,
+            my = y.m;
+        switch (sortId) {
+            case "added-new":
+                return y.i - x.i;
+            case "name-asc":
+                return cmpStr(mx.name, my.name);
+            case "name-desc":
+                return cmpStr(my.name, mx.name);
+            case "artist-asc":
+                return cmpStr(mx.artist, my.artist);
+            case "artist-desc":
+                return cmpStr(my.artist, mx.artist);
+            case "release-new":
+                return emptyLast(mx.release) - emptyLast(my.release) || cmpStr(my.release, mx.release);
+            case "release-old":
+                return emptyLast(mx.release) - emptyLast(my.release) || cmpStr(mx.release, my.release);
+            case "genre-asc":
+                return emptyLast(mx.genre) - emptyLast(my.genre) || cmpStr(mx.genre, my.genre);
+            case "type":
+                return cmpStr(mx.kind, my.kind) || cmpStr(mx.name, my.name);
+            case "added-old":
+            default:
+                return x.i - y.i;
+        }
+    });
+    return a.map((o) => o.u);
+}
+
 // ---- metadata fetch (cached, with fallbacks) ----
 // Spotify's Web API via CosmosAsync is richest but is broken on some clients
 // (spicetify/cli#1735), so we fall back to the auth-free oEmbed endpoint, which
 // reliably returns a title + cover art for albums and playlists.
 const metaCache = {};
+async function artistGenre(artistId) {
+    if (!artistId) return "";
+    try {
+        const a = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/artists/${artistId}`);
+        return (a.genres && a.genres[0]) || "";
+    } catch (e) {
+        return "";
+    }
+}
 async function webApi(type, id) {
     if (type === "album") {
         const r = await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/albums/${id}`);
+        const a0 = (r.artists && r.artists[0]) || {};
         return {
             name: r.name,
             image: (r.images && r.images[0] && r.images[0].url) || "",
             sub: "Album · " + (r.artists || []).map((a) => a.name).join(", "),
+            artist: a0.name || "",
+            release: r.release_date || "",
+            genre: (r.genres && r.genres[0]) || "",
+            artistId: a0.id || "",
+            kind: "album",
         };
     }
     const r = await Spicetify.CosmosAsync.get(
@@ -64,6 +138,11 @@ async function webApi(type, id) {
         name: r.name,
         image: (r.images && r.images[0] && r.images[0].url) || "",
         sub: "Playlist · " + ((r.owner && r.owner.display_name) || ""),
+        artist: (r.owner && r.owner.display_name) || "",
+        release: "",
+        genre: "",
+        artistId: "",
+        kind: "playlist",
     };
 }
 async function oembed(uri) {
@@ -81,13 +160,23 @@ async function fetchMeta(uri) {
     const parts = String(uri).split(":");
     const type = parts[1];
     const id = parts[2];
-    const meta = { uri, type, id, name: "", image: "", sub: titleCase(type) || "Item" };
+    const meta = {
+        uri, type, id, name: "", image: "", sub: titleCase(type) || "Item",
+        artist: "", release: "", genre: "", kind: type || "",
+    };
 
     try {
         const r = await webApi(type, id);
         if (r.name) meta.name = r.name;
         if (r.image) meta.image = r.image;
         if (r.sub) meta.sub = r.sub;
+        if (r.artist) meta.artist = r.artist;
+        if (r.release) meta.release = r.release;
+        if (r.genre) meta.genre = r.genre;
+        if (r.kind) meta.kind = r.kind;
+        if (type === "album" && !meta.genre && r.artistId) {
+            meta.genre = await artistGenre(r.artistId);
+        }
     } catch (e) {
         /* fall through to oembed */
     }
@@ -135,6 +224,12 @@ function injectCss() {
 .acoll-new{display:flex;gap:8px;margin-top:22px;max-width:680px;}
 .acoll-new input{flex:1;padding:10px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;}
 .acoll-empty{opacity:.55;margin:28px 0;font-size:15px;}
+.acoll-h-sp{flex:1;}
+.acoll-sort{display:flex;align-items:center;gap:8px;font-size:13px;}
+.acoll-sort label{opacity:.6;white-space:nowrap;}
+.acoll-sort select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.08) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='white'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 10px center;color:var(--spice-text,#fff);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:7px 30px 7px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+.acoll-sort select:hover{background-color:rgba(255,255,255,.14);}
+.acoll-sort select option{background:#282828;color:#fff;}
 `;
     document.head.appendChild(s);
 }
@@ -185,6 +280,7 @@ function App() {
     const [data, setData] = react.useState(loadData);
     const [, force] = react.useReducer((x) => x + 1, 0);
     const [newName, setNewName] = react.useState("");
+    const [sortBy, setSortBy] = react.useState(loadSort);
 
     react.useEffect(() => {
         injectCss();
@@ -232,6 +328,35 @@ function App() {
     const openId = readCollParam();
     const coll = openId ? data.collections.find((c) => c.id === openId) : null;
 
+    // Sorting needs metadata; prefetch any missing items then re-render once.
+    react.useEffect(() => {
+        if (!coll) return;
+        const missing = coll.items.filter((u) => !metaCache[u]);
+        if (!missing.length) return;
+        let live = true;
+        Promise.all(coll.items.map(fetchMeta)).then(() => {
+            if (live) force();
+        });
+        return () => {
+            live = false;
+        };
+    }, [openId, coll ? coll.items.length : 0]);
+
+    const changeSort = (v) => {
+        setSortBy(v);
+        saveSort(v);
+    };
+    const sortControl = h(
+        "div",
+        { className: "acoll-sort" },
+        h("label", null, "Sort by"),
+        h(
+            "select",
+            { value: sortBy, onChange: (e) => changeSort(e.target.value) },
+            SORTS.map((s) => h("option", { key: s.id, value: s.id }, s.label))
+        )
+    );
+
     // ---- single collection view ----
     if (coll) {
         return h(
@@ -242,7 +367,9 @@ function App() {
                 { className: "acoll-h" },
                 h("button", { className: "acoll-btn sec", onClick: goToList }, "← Back"),
                 h("h1", null, coll.name),
-                h("span", { className: "ct" }, coll.items.length + " items")
+                h("span", { className: "ct" }, coll.items.length + " items"),
+                coll.items.length > 0 ? h("span", { className: "acoll-h-sp" }) : null,
+                coll.items.length > 0 ? sortControl : null
             ),
             coll.items.length === 0
                 ? h(
@@ -253,7 +380,7 @@ function App() {
                 : h(
                       "div",
                       { className: "acoll-grid" },
-                      coll.items.map((uri) =>
+                      sortItems(coll.items, sortBy).map((uri) =>
                           h(Card, { key: uri, uri: uri, onRemove: (u) => removeItem(coll.id, u) })
                       )
                   )
