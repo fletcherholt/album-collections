@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#121212"/>
+    </linearGradient>
+    <linearGradient id="c1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7c948"/><stop offset="1" stop-color="#b5611a"/></linearGradient>
+    <linearGradient id="c2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddc97"/><stop offset="1" stop-color="#0a6e4f"/></linearGradient>
+    <linearGradient id="c3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#7a1f3d"/></linearGradient>
+    <linearGradient id="c4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8def"/><stop offset="1" stop-color="#1b2a6b"/></linearGradient>
+    <linearGradient id="c5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#4a1d6e"/></linearGradient>
+    <linearGradient id="c6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9e2d0"/><stop offset="1" stop-color="#8a8475"/></linearGradient>
+  </defs>
+
+  <!-- window -->
+  <rect x="0" y="0" width="1200" height="700" rx="14" fill="#000"/>
+
+  <!-- ===== Your Library sidebar ===== -->
+  <rect x="10" y="10" width="300" height="680" rx="10" fill="#121212"/>
+  <g transform="translate(28,34)" fill="#b3b3b3">
+    <path d="M2 1h2v18H2zM7 4h2v15H7zM13 1.5l1.9-.5 4 15-1.9.5z" transform="scale(1.1)"/>
+    <text x="34" y="16" font-size="15" font-weight="700" fill="#b3b3b3">Your Library</text>
+  </g>
+
+  <!-- pinned Collections button (our feature) -->
+  <rect x="22" y="74" width="276" height="56" rx="8" fill="#1f1f1f"/>
+  <g transform="translate(36,86)">
+    <g fill="#fff">
+      <rect x="0" y="0" width="14" height="14" rx="2"/><rect x="18" y="0" width="14" height="14" rx="2"/>
+      <rect x="0" y="18" width="14" height="14" rx="2"/><rect x="18" y="18" width="14" height="14" rx="2"/>
+    </g>
+    <text x="50" y="16" font-size="15" font-weight="700" fill="#fff">Collections</text>
+    <text x="50" y="34" font-size="12" fill="#1ed760" font-weight="600">▸ pinned in Your Library</text>
+  </g>
+
+  <!-- other library rows -->
+  <g font-family="Helvetica, Arial, sans-serif">
+    <!-- Liked Songs -->
+    <rect x="22" y="146" width="48" height="48" rx="6" fill="#5038a0"/>
+    <text x="46" y="176" font-size="22" text-anchor="middle" fill="#fff">♥</text>
+    <text x="82" y="167" font-size="15" font-weight="700" fill="#fff">Liked Songs</text>
+    <text x="82" y="186" font-size="12" fill="#a7a7a7">Playlist · 482 songs</text>
+    <!-- Daily Mix -->
+    <rect x="22" y="206" width="48" height="48" rx="6" fill="url(#c2)"/>
+    <text x="82" y="227" font-size="15" font-weight="700" fill="#fff">Daily Mix 1</text>
+    <text x="82" y="246" font-size="12" fill="#a7a7a7">Playlist · Made for you</text>
+    <!-- An album -->
+    <rect x="22" y="266" width="48" height="48" rx="6" fill="url(#c4)"/>
+    <text x="82" y="287" font-size="15" font-weight="700" fill="#fff">In Rainbows</text>
+    <text x="82" y="306" font-size="12" fill="#a7a7a7">Album · Radiohead</text>
+  </g>
+
+  <!-- ===== Main collection view ===== -->
+  <rect x="320" y="10" width="870" height="680" rx="10" fill="url(#bg)"/>
+
+  <!-- header -->
+  <rect x="348" y="40" width="92" height="34" rx="17" fill="none" stroke="#ffffff55" stroke-width="1.5"/>
+  <text x="394" y="62" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">← Back</text>
+  <text x="460" y="66" font-size="30" font-weight="800" fill="#fff">Chill Mix</text>
+  <text x="690" y="65" font-size="14" fill="#a7a7a7">6 items</text>
+
+  <!-- card template -->
+  <!-- row 1 -->
+  <g>
+    <rect x="348" y="110" width="256" height="296" rx="10" fill="#181818"/>
+    <rect x="368" y="130" width="216" height="216" rx="6" fill="url(#c1)"/>
+    <text x="368" y="378" font-size="16" font-weight="700" fill="#fff">Random Access…</text>
+    <text x="368" y="398" font-size="12.5" fill="#a7a7a7">Album · Daft Punk</text>
+  </g>
+  <g>
+    <rect x="624" y="110" width="256" height="296" rx="10" fill="#181818"/>
+    <rect x="644" y="130" width="216" height="216" rx="6" fill="url(#c2)"/>
+    <text x="644" y="378" font-size="16" font-weight="700" fill="#fff">Discovery</text>
+    <text x="644" y="398" font-size="12.5" fill="#a7a7a7">Album · Daft Punk</text>
+  </g>
+  <g>
+    <rect x="900" y="110" width="256" height="296" rx="10" fill="#181818"/>
+    <rect x="920" y="130" width="216" height="216" rx="6" fill="url(#c3)"/>
+    <text x="920" y="378" font-size="16" font-weight="700" fill="#fff">Currents</text>
+    <text x="920" y="398" font-size="12.5" fill="#a7a7a7">Album · Tame Impala</text>
+  </g>
+  <!-- row 2 -->
+  <g>
+    <rect x="348" y="416" width="256" height="256" rx="10" fill="#181818"/>
+    <rect x="368" y="436" width="216" height="176" rx="6" fill="url(#c4)"/>
+    <text x="368" y="644" font-size="16" font-weight="700" fill="#fff">In Rainbows</text>
+    <text x="368" y="664" font-size="12.5" fill="#a7a7a7">Album · Radiohead</text>
+  </g>
+  <g>
+    <rect x="624" y="416" width="256" height="256" rx="10" fill="#181818"/>
+    <rect x="644" y="436" width="216" height="176" rx="6" fill="url(#c5)"/>
+    <text x="644" y="644" font-size="16" font-weight="700" fill="#fff">Blonde</text>
+    <text x="644" y="664" font-size="12.5" fill="#a7a7a7">Album · Frank Ocean</text>
+  </g>
+  <g>
+    <rect x="900" y="416" width="256" height="256" rx="10" fill="#181818"/>
+    <rect x="920" y="436" width="216" height="176" rx="6" fill="url(#c6)"/>
+    <text x="920" y="644" font-size="16" font-weight="700" fill="#fff">AM</text>
+    <text x="920" y="664" font-size="12.5" fill="#a7a7a7">Album · Arctic Monkeys</text>
+  </g>
+</svg>

@@ -7,6 +7,11 @@ playlist covers. Click a cover to jump to the real Spotify page.
 
 Built as a [Spicetify](https://spicetify.app) custom app. macOS.
 
+![Collections UI preview](docs/preview.png)
+
+*A collection open in the main view, with the **Collections** button pinned in
+Your Library. (UI preview — album art and titles are placeholders.)*
+
 ## Install (run once)
 
 1. Make sure [Spicetify](https://spicetify.app/docs/getting-started) is installed.
