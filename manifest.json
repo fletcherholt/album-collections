@@ -1,7 +1,7 @@
 [
   {
     "name": "Collections",
-    "version": "1.1.0",
+    "version": "1.4.0",
     "description": "Group albums & playlists into named collections in a Your Library tab — without merging their tracks. One-click install version.",
     "preview": "docs/preview.png",
     "main": "collections.js",
@@ -13,7 +13,7 @@
   },
   {
     "name": "Collections (custom app)",
-    "version": "1.1.0",
+    "version": "1.4.0",
     "description": "Group albums & playlists into named collections as a dedicated sidebar tab/page (native back/forward). Browse here, then install via the repo's installers.",
     "preview": "docs/preview.png",
     "readme": "README.md",

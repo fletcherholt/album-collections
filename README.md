@@ -116,7 +116,7 @@ relaunches Spotify once). Your saved collections are untouched.
 - **Spicetify Marketplace:** remove then reinstall Collections in the
   Marketplace tab to pull the new code (Marketplace doesn't auto-update apps).
 
-The current version (e.g. `v1.1.0`) is shown next to the **Collections** title
+The current version (e.g. `v1.4.0`) is shown next to the **Collections** title
 inside the app, so you can tell at a glance whether you're up to date against the
 latest [release](https://github.com/fletcherholt/album-collections/releases).
 

@@ -6,7 +6,7 @@ const h = react.createElement;
 
 const STORE_KEY = "album-collections:v1";
 const APP_ROUTE = "/album-collections";
-const VERSION = "1.1.0";
+const VERSION = "1.4.0";
 
 function loadData() {
     try {
