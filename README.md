@@ -13,6 +13,12 @@ Windows, and Linux**.
 *A collection open in the main view, with the **Collections** button pinned in
 Your Library. (UI preview — album art and titles are placeholders.)*
 
+## Spicetify Marketplace
+
+This app is listed in the **Spicetify Marketplace** (Apps tab — search
+"Collections"). Note that Marketplace lets you *browse* custom apps but doesn't
+auto-install them, so use one of the installers below to actually set it up.
+
 ## Install (run once)
 
 First make sure [Spicetify](https://spicetify.app/docs/getting-started) and the
