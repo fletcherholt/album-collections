@@ -1,0 +1,10 @@
+{
+  "name": "Collections",
+  "description": "Group albums & playlists into named collections in a Your Library tab — without merging their tracks into one playlist.",
+  "preview": "docs/preview.png",
+  "readme": "README.md",
+  "authors": [
+    { "name": "fletcherholt", "url": "https://github.com/fletcherholt" }
+  ],
+  "tags": ["library", "albums", "playlists", "organization"]
+}
