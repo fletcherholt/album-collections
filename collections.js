@@ -627,5 +627,48 @@
             if (overlay) renderOverlay();
         });
     }
+
+    // --- update check -------------------------------------------------------
+    // Marketplace installs auto-update (the Marketplace re-loads this file from
+    // jsDelivr@main on each launch). This check covers manual/installer copies:
+    // once a day it reads the repo manifest version and, if newer, notifies.
+    async function checkForUpdate() {
+        try {
+            const KEY = "album-collections:last-update-check";
+            const DAY = 24 * 60 * 60 * 1000;
+            const last = parseInt(localStorage.getItem(KEY) || "0", 10);
+            if (Date.now() - last < DAY) return;
+            localStorage.setItem(KEY, String(Date.now()));
+
+            const url =
+                "https://raw.githubusercontent.com/fletcherholt/album-collections/main/manifest.json";
+            const data = await fetch(url + "?t=" + Date.now()).then((r) => r.json());
+            const entry = Array.isArray(data) ? data[0] : data;
+            const remote = entry && entry.version;
+            if (!remote) return;
+
+            const newer = (a, b) => {
+                const pa = String(a).split(".").map(Number);
+                const pb = String(b).split(".").map(Number);
+                for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                    const x = pa[i] || 0, y = pb[i] || 0;
+                    if (x > y) return true;
+                    if (x < y) return false;
+                }
+                return false;
+            };
+
+            if (newer(remote, VERSION) && Spicetify?.showNotification) {
+                Spicetify.showNotification(
+                    `Collections v${remote} is available (you have v${VERSION}). ` +
+                    `Restart Spotify to update — or re-run the installer if you installed manually.`
+                );
+            }
+        } catch (_) {
+            // network/parse errors are non-fatal; try again tomorrow
+        }
+    }
+
     boot();
+    checkForUpdate();
 })();
