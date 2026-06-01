@@ -15,9 +15,16 @@ Your Library. (UI preview — album art and titles are placeholders.)*
 
 ## Spicetify Marketplace
 
-This app is listed in the **Spicetify Marketplace** (Apps tab — search
-"Collections"). Note that Marketplace lets you *browse* custom apps but doesn't
-auto-install them, so use one of the installers below to actually set it up.
+Search **"Collections"** in the Marketplace. There are two builds:
+
+- **Collections** (Extensions tab) — **one-click Install**, no GitHub/terminal.
+  The UI opens as a full-screen overlay from the *Collections* button in Your
+  Library (Esc or the back button closes it).
+- **Collections (custom app)** (Apps tab) — a dedicated sidebar *tab/page* with
+  native back/forward. Marketplace only *browses* custom apps, so install this
+  one with the one-liner or installers below.
+
+Both share the same saved data, so you can switch between them freely.
 
 ## Quick install (one line)
 

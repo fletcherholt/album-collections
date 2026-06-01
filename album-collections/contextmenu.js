@@ -128,6 +128,9 @@
     }
 
     function registerContextMenu() {
+        // Guard against double registration if the extension build is also installed.
+        if (window.__acollContextRegistered) return;
+        window.__acollContextRegistered = true;
         new Spicetify.ContextMenu.Item(
             "Add to collection",
             (uris) => openModal(uris),
